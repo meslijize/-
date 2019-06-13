@@ -1,0 +1,101 @@
+问题描述：关于整数i的变换f和g定义如下：f(i)=3*i;g(i)=[i/2];试设计一个算法，对于给定的两个整数n和m，用最少的f和g变换次数将n转化为m。例如：可以将整数15用四次变换将它变成整数4:4=gfgg(15)。
+当整数n不可能变换成m时怎么处理？*算法设计：对任意给定的整数n和m，计算将整数n转换成m所需要的最少变换次数
+
+
+
+
+观察f和g两个函数发现，f总是使得i变大，g总是使得i变小。因此我们在决定让x执行哪个函数之前必须先判断i和目标值m之间的大小关系。如果x>m，就让其执行g函数；反之，执行f函数。这道题目有两种情况，
+一种是有解，即n可以通过函数变换成m；另一种是无解，即n无法通过函数变换成m。那我们如何去判断某一个样例输入是属于哪种情况呢？第一种情况比较容易，即我们只需要判断最后的i是否等于m即可。
+如果i等于m，那么说明n已经被变换成m了，递归返回。第二种情况的话需要我们找下规律。
+假设我们的输入n=9,m=5。
+n>m,执行g,n=[9/2]=4
+n<m,执行f,n=3*4=12
+n>m,执行g,n=[12/2]=6
+n>m,执行f,n=[6/2]=3
+n<m,执行g,n=3*3=9
+n>m,执行f,n=[9/2]=4
+我们会发现如果n的值陷入了一个重复的循环。
+也就是如果在我们递归的过程，出现了我们前面计算过的元素，那就说明n是无法转换成m的。
+
+#include<iostream>
+#include<fstream>
+#include<sstream>
+ using namespace std;
+ class IntChange{
+	public:
+		int n;//待变换的整数
+		int m;//需要变换成的整数
+		int nowcount;//当前已变换的次数 
+		int mincount;//记录最小的变换次数
+		int *sign;//记录路径，0表示左子树f,1表示右子树g
+ 		int *minsign;//记录最小变换次数的路径
+ 		int *recordx;//记录出现过的值
+ 		 		int Backtrack(int x);
+				int test(int x){
+			int i=1;
+			while(recordx[i]!=-1){
+				if(x==recordx[i])
+	return 0;
+				i++;
+			}
+			return 1;
+		}
+ 				int f(int i){	
+		return 3*i;	
+	}
+				int g(int i){
+			return i/2;	
+	}}; int IntChange::Backtrack(int x){
+	if(test(x)==0){
+		return 0;
+	}//检测n是否能够转化为m 
+	if(x==m){
+		if(nowcount<mincount){
+			mincount=nowcount;
+			for(int i=1;i<=n;i++) minsign[i]=sign[i];
+		}
+		return 1;//返回 
+	}
+	nowcount++;
+		recordx[nowcount]=x;
+	if(nowcount<mincount){//当前的变换次数小于mincount
+ 	    if(x<m){
+		sign[nowcount]=0;
+ 		Backtrack(f(x));//当x小于m时先进入左子树
+	    			}
+		else{
+		sign[nowcount]=1;
+		Backtrack(g(x));//当X大于m时进入右子树
+ 					}
+	}} 
+ void Compute(int n,int m,ofstream &outfile){
+	IntChange ic;//实例化一个对象	ic.n=n;
+	ic.m=m;	ic.nowcount=0;
+	ic.mincount=INT_MAX;
+	ic.sign=new int[256];
+	ic.minsign=new int[256];
+	ic.recordx=new int[256];
+	for(int i=0;i<=n;i++){
+		ic.sign[i]=-1;ic.minsign[i]=-1;ic.recordx[i]=-1;//初始化为-1 	} 
+		if(ic.Backtrack(ic.n)==1){
+	outfile<<ic.mincount<<endl;	int i=1;
+	while(ic.minsign[i]!=-1){
+		if(ic.minsign[i]==0) outfile<<"f";
+		else outfile<<"g";
+		i++;	}
+	outfile<<endl;	}
+	else{
+		outfile<<ic.n<<"无法转化为"<<ic.m<<endl;
+	}
+	delete []ic.sign;
+	delete []ic.minsign;}
+   int main(){
+	ifstream cinfile;
+	cinfile.open("input.txt",ios::in);	int n,m;
+	cinfile>>n>>m;
+	cinfile.close();
+		ofstream outfile;
+	outfile.open("output.txt",ios::out);
+	Compute(n,m,outfile);
+	outfile.close();
+	return 0;}
